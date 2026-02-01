@@ -1,0 +1,124 @@
+<resources>
+    <string name="app_name">GuardianAI</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Главная</string>
+    <string name="nav_history">История</string>
+    <string name="nav_settings">Настройки</string>
+
+    <!-- Main Screen Status -->
+    <string name="status_checking">Проверка статуса...</string>
+    <string name="status_connecting">Подключение к серверу защиты...</string>
+    <string name="status_protection_disabled">Защита отключена</string>
+    <string name="status_protection_inactive_no_server">Защита неактивна\nНет доступа к серверу</string>
+    <string name="status_protection_active">Защита активна</string>
+
+    <string name="status_desc_permission_needed">Для работы приложения необходимо разрешить доступ к уведомлениям.</string>
+    <string name="status_desc_no_server">Проверьте подключение к интернету или запустите локальный сервер.</string>
+    <string name="status_desc_active">Guardian AI анализирует уведомления в фоновом режиме.</string>
+
+    <!-- Buttons & Dialogs (General) -->
+    <string name="btn_enable_protection">Включить защиту</string>
+    <string name="btn_open_settings">Открыть настройки</string>
+    <string name="btn_cancel">Отмена</string>
+    <string name="btn_allow">Разрешить</string>
+    <string name="btn_no_thanks">Нет, спасибо</string>
+    <string name="btn_close">Закрыть</string>
+    <string name="btn_delete">Удалить</string>
+
+    <!-- Permissions -->
+    <string name="dialog_permission_title">Требуется разрешение</string>
+    <string name="dialog_permission_text">GuardianAI нужен доступ к уведомлениям для защиты от спама.</string>
+
+    <string name="dialog_overlay_text">GuardianAI необходимо разрешение "Поверх других приложений", чтобы показывать предупреждения о мошенничестве.</string>
+
+    <string name="dialog_disable_protection_title">Отключить защиту?</string>
+    <string name="dialog_disable_protection_text">Если вы отключите защиту, вы не будете получать уведомления о подозрительных сообщениях и спаме. Вы уверены?</string>
+    <string name="btn_turn_off">Отключить</string>
+
+    <string name="dialog_contact_title">Улучшите защиту</string>
+    <string name="dialog_contact_text">Разрешите доступ к контактам, чтобы GuardianAI мог автоматически пропускать сообщения от ваших друзей и знакомых.</string>
+
+    <string name="toast_contact_later">Вы можете включить это позже в настройках</string>
+    <string name="toast_contact_limited">Без доступа к контактам фильтр \'Белый список\' будет ограничен.</string>
+    <string name="toast_need_contact_permission">Нужен доступ к контактам</string>
+
+    <!-- Settings Screen -->
+    <string name="screen_settings_title">Настройки</string>
+    <string name="settings_whitelist_title">Белый список</string>
+    <string name="settings_whitelist_subtitle">Доверенные приложения и контакты</string>
+
+    <string name="settings_permission_title">Доступ к уведомлениям</string>
+    <string name="settings_permission_subtitle">Управление правами доступа</string>
+
+    <string name="settings_check_server_title">Проверить сервер</string>
+    <string name="settings_check_server_subtitle">Нажмите, чтобы проверить связь с AI</string>
+
+    <string name="settings_overlay_title">Поверх других окон</string>
+    <string name="settings_overlay_subtitle">Разрешить показывать тревогу поверх приложений</string>
+
+    <string name="settings_strict_mode_title">Строгий режим</string>
+    <string name="settings_strict_mode_subtitle">Более агрессивная проверка. Может блокировать подозрительные, но безопасные сообщения.</string>
+
+    <string name="settings_theme_title">Тема оформления</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Темная</string>
+    <string name="theme_system">Системная</string>
+
+    <string name="settings_about_title">О приложении</string>
+    <string name="settings_about_subtitle">Версия 1.0 (Guardian AI Core 2.0)</string>
+
+    <string name="dialog_theme_title">Выберите тему</string>
+
+    <string name="toast_checking_connection">Проверка связи...</string>
+    <string name="toast_server_available">✅ Сервер доступен!</string>
+    <!-- Note: Error message formatted in code -->
+
+    <!-- Whitelist Screen -->
+    <string name="screen_whitelist_title">Белый список</string>
+    <string name="menu_select">Выбрать</string>
+    <string name="menu_select_ellipsis">Выбрать...</string>
+
+    <string name="tab_apps">Приложения</string>
+    <string name="tab_contacts">Контакты</string>
+
+    <string name="empty_trusted_apps">Нет доверенных приложений</string>
+    <string name="empty_trusted_contacts">Нет доверенных контактов</string>
+
+    <string name="dialog_select_apps_title">Выберите приложения</string>
+    <string name="dialog_no_apps_found">Приложения не найдены</string>
+    <string name="dialog_all_apps_added">Все приложения уже добавлены</string>
+
+    <string name="dialog_select_contacts_title">Выберите контакты</string>
+    <string name="dialog_no_contacts_found">Контакты не найдены на устройстве</string>
+    <string name="dialog_all_contacts_added">Все контакты уже добавлены</string>
+
+    <!-- History Screen -->
+    <string name="screen_history_title">История проверок</string>
+    <string name="empty_history">История пуста</string>
+
+    <string name="btn_select_all">Выбрать все</string>
+    <string name="btn_deselect_all">Снять все</string>
+    <string name="btn_all">Все</string>
+
+    <string name="dialog_delete_title">Удалить выбранное?</string>
+
+    <string name="label_scam_detected">ОПАСНО</string>
+    <string name="label_suspicious">ПОДОЗРИТЕЛЬНО</string>
+    <string name="label_safe">БЕЗОПАСНО</string>
+
+    <string name="menu_copy">Копировать</string>
+    <string name="menu_report_not_spam">Это не спам (Сообщить)</string>
+
+    <string name="toast_copied">Скопировано</string>
+    <string name="toast_report_sent">Спасибо! Мы проверим.</string>
+
+    <!-- Format Strings -->
+    <string name="fmt_whitelist_selected">Выбрано: %d</string>
+    <string name="fmt_history_selected">%d выбрано</string>
+    <string name="fmt_btn_add_count">Добавить (%d)</string>
+    <string name="fmt_dialog_delete_text">Вы действительно хотите удалить %d записей?</string>
+
+    <string name="search_hint">Поиск...</string>
+
+</resources>

@@ -71,7 +71,11 @@ fun WhitelistScreen(onBack: () -> Unit, repository: GuardianRepository? = null) 
                     if (isSelectionMode) {
                         Text(stringResource(R.string.fmt_whitelist_selected, selectedItems.size))
                     } else {
-                        Text(stringResource(R.string.screen_whitelist_title)) 
+                        Text(
+                            stringResource(R.string.screen_whitelist_title),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.headlineMedium
+                        ) 
                     }
                 },
                 navigationIcon = {
@@ -86,12 +90,6 @@ fun WhitelistScreen(onBack: () -> Unit, repository: GuardianRepository? = null) 
                             Icon(Icons.Default.Delete, contentDescription = "Delete")
                         }
                     } else {
-                        IconButton(onClick = { 
-                            if (selectedTab == 0) viewModel.loadInstalledApps() else viewModel.loadContacts()
-                            showAddDialog = true 
-                        }) {
-                            Icon(Icons.Default.Add, contentDescription = "Add")
-                        }
                         IconButton(onClick = { viewModel.toggleSelectionMode() }) {
                             Icon(Icons.Default.Delete, contentDescription = "Select for delete")
                         }

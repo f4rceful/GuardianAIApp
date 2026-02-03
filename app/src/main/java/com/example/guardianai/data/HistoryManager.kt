@@ -1,6 +1,7 @@
 package com.example.guardianai.data
 
 import android.content.Context
+import com.example.guardianai.network.ExplanationItem
 import com.example.guardianai.network.PredictionResponse
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -15,6 +16,8 @@ data class HistoryItem(
     val isScam: Boolean,
     val isWarning: Boolean = false,
     val reason: List<String>,
+    val entities: Map<String, List<String>>? = null,
+    val explanation: List<ExplanationItem>? = null,
     val timestamp: String = SimpleDateFormat("dd MMM HH:mm", Locale.getDefault()).format(Date())
 )
 
@@ -32,7 +35,9 @@ object HistoryManager {
             text = text,
             isScam = response.is_scam,
             isWarning = isWarning,
-            reason = response.reason
+            reason = response.reason,
+            entities = response.entities,
+            explanation = response.explanation
         )
         
         // Добавление в начало списка
@@ -68,5 +73,23 @@ object HistoryManager {
     fun clearHistory(context: Context) {
         val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         sharedPreferences.edit().remove(KEY_HISTORY).apply()
+    }
+    
+    // Statistics
+    data class Stats(
+        val totalScans: Int = 0,
+        val scamsBlocked: Int = 0,
+        val warningsShown: Int = 0,
+        val safeMessages: Int = 0
+    )
+    
+    fun getStats(context: Context): Stats {
+        val history = getHistory(context)
+        return Stats(
+            totalScans = history.size,
+            scamsBlocked = history.count { it.isScam },
+            warningsShown = history.count { it.isWarning && !it.isScam },
+            safeMessages = history.count { !it.isScam && !it.isWarning }
+        )
     }
 }

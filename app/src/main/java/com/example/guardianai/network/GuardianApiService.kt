@@ -10,11 +10,21 @@ data class PredictionRequest(
     val context: List<String> = emptyList()
 )
 
+// Класс для элемента объяснения (Explainability)
+data class ExplanationItem(
+    val span: List<Int>? = null,
+    val word: String,
+    val type: String,
+    val impact: Float
+)
+
 data class PredictionResponse(
     val is_scam: Boolean,
     val score: Float,
     val reason: List<String>,
-    val verdict: String
+    val verdict: String,
+    val entities: Map<String, List<String>> = emptyMap(),
+    val explanation: List<ExplanationItem> = emptyList()
 )
 
 data class FeedbackRequest(

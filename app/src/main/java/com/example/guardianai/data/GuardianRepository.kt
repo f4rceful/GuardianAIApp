@@ -12,7 +12,79 @@ class GuardianRepository(private val api: GuardianApiService = RetrofitClient.in
     // --- Network Operations ---
 
     suspend fun predict(text: String, strictMode: Boolean, context: List<String> = emptyList()): PredictionResponse {
-        return api.predict(PredictionRequest(text, strictMode, context))
+        val lowerText = text.lowercase()
+
+        // 1. Проверка протокола: HTTP (Незашифрованное) -> Всегда СКАМ
+        if (text.contains("http://", ignoreCase = true)) {
+            return PredictionResponse(
+                is_scam = true,
+                score = 0.95f,
+                reason = listOf("⛔ Незащищенное соединение (HTTP)", "⚠️ Данные могут быть перехвачены"),
+                verdict = "DANGEROUS",
+                entities = emptyMap(),
+                explanation = emptyList()
+            )
+        }
+
+        // 2. Проверка Белого списка (Официальные домены) -> Всегда БЕЗОПАСНО
+        val safeDomains = listOf(
+            "telegram.org", "t.me", "google.com", "android.com", "whatsapp.com", "vk.com"
+        )
+        val isSafeDomain = safeDomains.any { lowerText.contains(it) }
+
+        if (isSafeDomain) {
+            return PredictionResponse(
+                is_scam = false,
+                score = 0.01f,
+                reason = listOf("✅ Официальный домен", "ℹ️ Безопасное соединение"),
+                verdict = "SAFE",
+                entities = emptyMap(),
+                explanation = emptyList()
+            )
+        }
+
+        // 3. Запрос к API (ML)
+        val response = api.predict(PredictionRequest(text, strictMode, context))
+
+        // 4. Пост-обработка: 
+        // А) Проверка СПАМ-контекста (keywords)
+        // Если есть ссылка И спам-слова -> СКАМ (даже если ML сомневается)
+        val spamKeywords = listOf(
+            "казино", "casino", "выигрыш", "prize", "подарок", "gift", 
+            "bitcoin", "крипта", "инвестиции", "заработок", "счет", "акция"
+        )
+        val hasSpamKeyword = spamKeywords.any { lowerText.contains(it) }
+        val hasLink = text.contains("http", ignoreCase = true) // http or https
+
+        if (hasLink && hasSpamKeyword) {
+            return response.copy(
+                is_scam = true,
+                score = 0.99f,
+                reason = response.reason.toMutableList().apply {
+                    add(0, "⛔ Обнаружен СПАМ-контекст")
+                    add("⚠️ Подозрительные слова + Ссылка")
+                },
+                verdict = "DANGEROUS"
+            )
+        }
+
+        // Б) Неизвестный HTTPS -> Предупреждение
+        if (text.contains("https://", ignoreCase = true) && !isSafeDomain) {
+            val hasHighConfidence = response.score > 0.8f
+            if (!hasHighConfidence && !response.is_scam) {
+                // Если ML не уверен, что это скам, но ссылка есть -> добавляем Warning
+                return response.copy(
+                    reason = response.reason + listOf(
+                        "⚡ Подозрительно: Неизвестный источник",
+                        "ℹ️ Не переходите по ссылке, если не ждали её"
+                    ),
+                    // Не меняем is_scam, но score можно чуть поднять для UI Warning
+                    score = if(response.score < 0.55f) 0.55f else response.score 
+                )
+            }
+        }
+
+        return response
     }
 
     suspend fun checkServerConnection(): Boolean {

@@ -28,12 +28,13 @@ class GuardianNotificationListener : NotificationListenerService() {
     private val TAG = "GuardianListener"
     private val scope = CoroutineScope(Dispatchers.IO)
     private var windowManager: WindowManager? = null
+    // Инициализация репозитория (централизованная логика)
+    private val repository = com.example.guardianai.data.GuardianRepository()
 
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
     }
-
     override fun onListenerConnected() {
         super.onListenerConnected()
         Log.d(TAG, "Служба Guardian AI ПОДКЛЮЧЕНА! ✅ Готов к перехвату.")
@@ -52,14 +53,12 @@ class GuardianNotificationListener : NotificationListenerService() {
         
         // Проверка: включена ли защита глобально
         if (!com.example.guardianai.data.SettingsManager.isProtectionEnabled.value) {
-             // Log.d(TAG, "Protection is DISABLED by user. Skipping.")
              return
         }
 
         // Проверка настроек
         val trustedApps = com.example.guardianai.data.SettingsManager.trustedApps.value
         if (trustedApps.contains(packageName)) {
-            Log.d(TAG, "Пакет $packageName в ДОВЕРЕННЫХ. Пропуск.")
             return
         }
 
@@ -75,7 +74,6 @@ class GuardianNotificationListener : NotificationListenerService() {
         // Проверка доверенных контактов
         val trustedContacts = com.example.guardianai.data.SettingsManager.trustedContacts.value
         if (trustedContacts.any { title.contains(it, ignoreCase = true) }) {
-             Log.d(TAG, "Контакт $title в ДОВЕРЕННЫХ. Пропуск.")
              return
         }
 
@@ -87,7 +85,6 @@ class GuardianNotificationListener : NotificationListenerService() {
         if (text.contains("doing work in the background", ignoreCase = true) ||
             title.contains("doing work in the background", ignoreCase = true) ||
             text.contains("is running", ignoreCase = true)) {
-            Log.d(TAG, "Игнорируется уведомление фоновой службы: $text")
             return
         }
 
@@ -99,37 +96,45 @@ class GuardianNotificationListener : NotificationListenerService() {
                 // Объединение заголовка и текста
                 val fullText = "$title. $text"
                 val isStrict = com.example.guardianai.data.SettingsManager.isStrictMode.value
-                val response = RetrofitClient.instance.predict(PredictionRequest(text = fullText, strict_mode = isStrict))
+                
+                // Определяем контекст (Имя приложения)
+                val appName = getAppName(packageName)
+                val context = listOf(appName)
 
-                // Сохранение в историю (пока базовое)
-                // Основной saveScan переместим ниже, чтобы учесть флаг isWarning
+                // ИСПОЛЬЗУЕМ REPOSITORY (включает WhiteList, Protocol checks, и ML)
+                val response = repository.predict(fullText, strictMode = isStrict, context = context)
+                
+                // Логика отображения на основе ответа репозитория
+                val isScam = response.is_scam
+                val isWarning = response.score > 0.5f && !isScam // Warning если счет выше 0.5 но не скам
 
-                if (response.is_scam) {
-                    withContext(Dispatchers.Main) {
-                        Log.w(TAG, "SCAM DETECTED! Score: ${response.score}")
-                        // Показ понятного сообщения
-                        showOverlayAlert("Мошенники / Спам", isWarning = false)
-                        // Сохранение SCAM
+                withContext(Dispatchers.Main) {
+                    if (isScam) {
+                        Log.w(TAG, "SCAM DETECTED! Score: ${response.score}, Verdict: ${response.verdict}")
+                        
+                        // Формирование сообщения
+                        val reasonText = response.reason.firstOrNull() ?: "Мошенничество"
+                        
+                        showOverlayAlert(reasonText, isWarning = false)
                         com.example.guardianai.data.HistoryManager.saveScan(applicationContext, fullText, response)
-                    }
-                } else {
-                    // Если ИИ считает сообщение безопасным, но есть ссылка
-                    if (fullText.contains(Regex("https?://\\S+"))) {
-                        Log.w(TAG, "Safe message but contains LINK from unknown source.")
-                        withContext(Dispatchers.Main) {
-                            showOverlayAlert("Не переходите по ссылкам\nот неизвестных источников!", isWarning = true)
-                            // Сохранение WARNING
-                            com.example.guardianai.data.HistoryManager.saveScan(applicationContext, fullText, response, isWarning = true)
-                        }
+                        
+                    } else if (isWarning) {
+                        Log.w(TAG, "WARNING DETECTED! Score: ${response.score}")
+                        
+                        val reasonText = response.reason.lastOrNull() ?: "Подозрительно"
+                        
+                        showOverlayAlert(reasonText, isWarning = true)
+                        com.example.guardianai.data.HistoryManager.saveScan(applicationContext, fullText, response, isWarning = true)
+                        
                     } else {
-                        Log.i(TAG, "Message is SAFE.")
+                        Log.i(TAG, "Message is SAFE. Score: ${response.score}")
                         // Сохранение SAFE
                         com.example.guardianai.data.HistoryManager.saveScan(applicationContext, fullText, response)
                     }
                 }
 
             } catch (e: Exception) {
-                Log.e(TAG, "API Error: ${e.message}")
+                Log.e(TAG, "Error checking notification: ${e.message}")
             }
         }
     }
@@ -161,8 +166,6 @@ class GuardianNotificationListener : NotificationListenerService() {
 
             // Основной контейнер (Пузырь)
             val layout = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(48, 36, 48, 36)
@@ -249,7 +252,6 @@ class GuardianNotificationListener : NotificationListenerService() {
 
             // Затем анимируем
             layout.post {
-            layout.post {
                 layout.animate()
                     .translationY(0f)
                     .alpha(1f)
@@ -265,5 +267,15 @@ class GuardianNotificationListener : NotificationListenerService() {
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         // Do nothing
+    }
+
+    private fun getAppName(packageName: String): String {
+        return try {
+            val pm = applicationContext.packageManager
+            val appInfo = pm.getApplicationInfo(packageName, 0)
+            pm.getApplicationLabel(appInfo).toString()
+        } catch (e: Exception) {
+            packageName // Fallback
+        }
     }
 }

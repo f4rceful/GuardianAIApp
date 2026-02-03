@@ -32,6 +32,10 @@ class HistoryViewModel(
         val list = repository.getHistory(getApplication())
         _historyList.value = list
     }
+    
+    fun refreshHistory() {
+        loadHistory()
+    }
 
     fun enterSelectionMode(initialId: Long? = null) {
         _isSelectionMode.value = true
